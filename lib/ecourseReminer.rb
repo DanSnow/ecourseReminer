@@ -39,7 +39,7 @@ class EcourseReminer < Qt::Dialog
 	connect(exitAction, SIGNAL("triggered()"), self, SLOT("close()"))
 	connect(@ui.loginBtn, SIGNAL("clicked()"), self, SLOT("login()"))
 
-    @conf = Setting.new("../config/conf.yml")
+    @conf = Setting.new("conf.yml")
 
     @ui.tB.removeItem(0)
 
