@@ -1,0 +1,7 @@
+<RCC>
+  <qresource prefix="img">
+    <file>img/Button-Upload-icon.png</file>
+    <file>img/Close-2-icon.png</file>
+    <file>img/Timeline-List-Grid-List-icon.png</file>
+  </qresource>
+</RCC>
