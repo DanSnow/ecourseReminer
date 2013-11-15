@@ -1,3 +1,4 @@
 #!/usr/bin/zsh
+cd $(dirname $0)
 cd ../lib
 ruby ecourseReminer.rb
