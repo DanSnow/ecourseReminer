@@ -35,9 +35,9 @@ class EcourseReminer < Qt::Dialog
     connect(logoutAction, SIGNAL("triggered()"), self, SLOT("logout()"))
     connect(exitAction, SIGNAL("triggered()"), self, SLOT("close()"))
     connect(@ui.loginBtn, SIGNAL("clicked()"), self, SLOT("login()"))
-    connect(@ui.delBtn, SIGNAL("clicked()"), self, SLOT("hideHomework"))
+    connect(@ui.delBtn, SIGNAL("clicked()"), self, SLOT("hideHomework()"))
 
-    @conf = Setting.new("conf.yml")
+    @conf = Setting.new("../config/conf.yml")
 
     @ui.tB.removeItem(0)
 
@@ -137,8 +137,8 @@ class EcourseReminer < Qt::Dialog
   end
   def closeEvent(event)
     @conf.save("conf.yml")
-    reply = Qt::MessageBox::question(this, "Exit?", "Do you really want to exit?", Qt::MessageBox::Yes|Qt::MessageBox::No)
-    if replay == Qt::MessageBox::Yes
+    reply = Qt::MessageBox::question(self, "Exit?", "Do you really want to exit?", Qt::MessageBox.Yes, Qt::MessageBox.No)
+    if reply == Qt::MessageBox::Yes
       event.accept
     else
       event.ignore
