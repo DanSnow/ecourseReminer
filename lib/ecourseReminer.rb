@@ -2,7 +2,6 @@
 
 require 'Qt'
 
-require 'pry'
 require 'date'
 require 'base64'
 
@@ -13,7 +12,7 @@ require_relative 'setting.rb'
 
 class EcourseReminer < Qt::Dialog
   include Ui
-  slots "login()", "click(bool)", "logout()"
+  slots "login()", "click(bool)", "logout()", "hideHomework()"
   def initialize(parent = nil)
     super
     @ui = EcourseReminerDia.new
@@ -21,23 +20,22 @@ class EcourseReminer < Qt::Dialog
 
     @handler = EcourseHandler.new
     @homework = nil
-	@selectHomework = []
-	@button = []
-	#binding.pry
+    @selectHomework = []
 
-	logoutAction = Qt::Action.new("Logout", self)
-	exitAction = Qt::Action.new("Exit", self)
+    logoutAction = Qt::Action.new("Logout", self)
+    exitAction = Qt::Action.new("Exit", self)
 
-	menu = Qt::Menu.new
+    menu = Qt::Menu.new
 
-	menu.addAction(logoutAction)
-	menu.addAction(exitAction)
+    menu.addAction(logoutAction)
+    menu.addAction(exitAction)
 
-	@ui.menuBtn.setMenu(menu)
+    @ui.menuBtn.setMenu(menu)
 
     connect(logoutAction, SIGNAL("triggered()"), self, SLOT("logout()"))
-	connect(exitAction, SIGNAL("triggered()"), self, SLOT("close()"))
-	connect(@ui.loginBtn, SIGNAL("clicked()"), self, SLOT("login()"))
+    connect(exitAction, SIGNAL("triggered()"), self, SLOT("close()"))
+    connect(@ui.loginBtn, SIGNAL("clicked()"), self, SLOT("login()"))
+    connect(@ui.delBtn, SIGNAL("clicked()"), self, SLOT("hideHomework"))
 
     @conf = Setting.new("conf.yml")
 
@@ -48,10 +46,10 @@ class EcourseReminer < Qt::Dialog
       if doLogin(@conf['id'], Base64::decode64(@conf['pass']))
         @ui.stack.setCurrentIndex(1)
         @ui.autoLoginChk.setChecked(true)
-		return
+        return
       end
     end
-	@ui.stack.setCurrentIndex(0)
+    @ui.stack.setCurrentIndex(0)
   end
 
   def login
@@ -77,7 +75,7 @@ class EcourseReminer < Qt::Dialog
   end
   def showHomework
     getHomework if ! @homework
-	count = 0
+    count = 0
     @homework.each { |k, v|
       vbox = Qt::VBoxLayout.new
       v.each { |x|
@@ -87,12 +85,11 @@ class EcourseReminer < Qt::Dialog
         btn.setCheckable(true)
         btn.setChecked(false)
         connect(btn, SIGNAL("clicked(bool)"), self, SLOT("click(bool)"))
-		@button << btn
         if (x.date - Date::today).to_i <= 2
           btn.setStyleSheet("color:red")
         end
         vbox.addWidget(btn, 1, Qt::AlignRight|Qt::AlignVCenter)
-		count += 1
+        count += 1
       }
       widget = Qt::Widget.new
       widget.setLayout(vbox)
@@ -101,7 +98,7 @@ class EcourseReminer < Qt::Dialog
     @ui.delBtn.setEnabled(false)
     @ui.uploadBtn.setEnabled(false)
     @ui.tB.setCurrentIndex(0)
-	@ui.noifyL.setText("H: #{count}")
+    @ui.noifyL.setText("H: #{count}")
     @prevIndex=0
     @click = 0
   end
@@ -112,12 +109,14 @@ class EcourseReminer < Qt::Dialog
       v.reject {|x| @conf['hideHomework'].include?(x.name)}
     }
   end
+  def hideHomework
+  end
   def click(x)
     if x
-	  @selectHomework << sender().text().split(" ")[0]
+      @selectHomework << sender()
       @click += 1
     else
-	  @selectHomework.delete sender().text().split(" ")[0]
+      @selectHomework.delete sender()
       @click -= 1
     end
     case @click
@@ -133,12 +132,17 @@ class EcourseReminer < Qt::Dialog
     end
   end
   def logout
-	@handler.logout
-	@ui.stack.setCurrentIndex(0)
+    @handler.logout
+    @ui.stack.setCurrentIndex(0)
   end
   def closeEvent(event)
     @conf.save("conf.yml")
-    event.accept
+    reply = Qt::MessageBox::question(this, "Exit?", "Do you really want to exit?", Qt::MessageBox::Yes|Qt::MessageBox::No)
+    if replay == Qt::MessageBox::Yes
+      event.accept
+    else
+      event.ignore
+    end
   end
 end
 
