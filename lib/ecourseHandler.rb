@@ -5,6 +5,7 @@ require 'net/http'
 require 'date'
 
 require 'rubygems'
+require 'mechanize'
 require 'nokogiri'
 
 require 'pry'
