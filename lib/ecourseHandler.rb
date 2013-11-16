@@ -10,6 +10,9 @@ require 'nokogiri'
 
 require 'pry'
 
+Encoding.default_external = Encoding::UTF_8
+Encoding.default_internal = Encoding::UTF_8
+
 class EcourseHandler
   def initialize ()
     @id = nil
@@ -45,11 +48,12 @@ class EcourseHandler
       @agent.get("http://ecourse.elearning.ccu.edu.tw/php/login_s.php?courseid=#{k}")
       @agent.get("http://ecourse.elearning.ccu.edu.tw/php/Testing_Assessment/show_allwork.php")
       homework[v]=[]
+	  @agent.page.encoding = 'BIG5'
       @agent.page.parser.css("table table tr").drop(1).map { |x|
 		#binding.pry
 		next if x.css("td input[value=\"uploadwork\"]")[0]['disabled']
         workId = x.css("td input[name=\"work_id\"]")[0]['value']
-        name = x.css("td")[1].text.encode("UTF-8", "BIG5", :undef => :replace, :invalid => :replace)
+        name = x.css("td")[1].text.encode("UTF-8")#, "BIG5", :undef => :replace, :invalid => :replace)
 		date = Date.parse(x.css("td")[3].text.chomp)
 		resp = getResp("http://ecourse.elearning.ccu.edu.tw/php/Testing_Assessment/show_allwork.php", true, {'action' => 'seemywork', 'work_id' => workId})
 		page = Nokogiri::HTML(resp.body.encode("UTF-8", "BIG5", :undef => :replace, :invalid => :replace))
@@ -61,7 +65,8 @@ class EcourseHandler
         homework[v] << @homeworkData.new(workId, name, done, k, date)
       }
     }
-	p homework
+	#p homework
+	#binding.pry
     return homework
   end
   def getId
