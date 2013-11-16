@@ -16,14 +16,21 @@ class EcourseHandler
     @pass = nil
     @courseId = Hash.new
     @homeworkData = Struct.new(:id, :name, :done, :courseID, :date)
+	@agent = Mechanize.new { |a|
+	  a.follow_meta_refresh = true
+	}
   end
   def login(id = nil, pass = nil)
     @id = id if id
     @pass = pass if pass
     raise "No ID and Password" if !@id
-    postData = Net::HTTP.post_form(URI.parse('http://ecourse.elearning.ccu.edu.tw/php/index_login.php'), {'id' => @id, 'pass' => @pass, 'ver' => 'C'})
-    raise "Login Fail" if postData.code != "302"
-    @session = postData['set-cookie'].split(";")[0]
+    @agent.get("http://ecourse.elearning.ccu.edu.tw/")
+	@agent.page.form_with(:name => 'loginform') { |form|
+	  form.id = @id
+	  form.pass = @pass
+	}.submit
+    raise "Login Fail" if ! @agent.page.uri.path.match(%r!^/php/Courses_Admin/!)
+    @session = @agent.cookies.select{|x| x.name == "PHPSESSID"}[0].value
     getCourseIdList()
     return true
   end
@@ -35,15 +42,14 @@ class EcourseHandler
     checkLogin()
     homework = Hash.new
     @courseId.each { |k, v|
-      getResp("http://ecourse.elearning.ccu.edu.tw/php/login_s.php?courseid=#{k}")
-      resp = getResp("http://ecourse.elearning.ccu.edu.tw/php/Testing_Assessment/show_allwork.php")
-      page = Nokogiri::HTML(resp.body.encode("UTF-8", "BIG5", :undef => :replace, :invalid => :replace))
+      @agent.get("http://ecourse.elearning.ccu.edu.tw/php/login_s.php?courseid=#{k}")
+      @agent.get("http://ecourse.elearning.ccu.edu.tw/php/Testing_Assessment/show_allwork.php")
       homework[v]=[]
-      page.css("table table tr").drop(1).map { |x|
+      @agent.page.parser.css("table table tr").drop(1).map { |x|
 		#binding.pry
 		next if x.css("td input[value=\"uploadwork\"]")[0]['disabled']
         workId = x.css("td input[name=\"work_id\"]")[0]['value']
-        name = x.css("td")[1].text
+        name = x.css("td")[1].text.encode("UTF-8", "BIG5", :undef => :replace, :invalid => :replace)
 		date = Date.parse(x.css("td")[3].text.chomp)
 		resp = getResp("http://ecourse.elearning.ccu.edu.tw/php/Testing_Assessment/show_allwork.php", true, {'action' => 'seemywork', 'work_id' => workId})
 		page = Nokogiri::HTML(resp.body.encode("UTF-8", "BIG5", :undef => :replace, :invalid => :replace))
@@ -55,6 +61,7 @@ class EcourseHandler
         homework[v] << @homeworkData.new(workId, name, done, k, date)
       }
     }
+	p homework
     return homework
   end
   def getId
@@ -62,22 +69,21 @@ class EcourseHandler
     return @courseId.keys
   end
   def logout
-	getResp("http://ecourse.elearning.ccu.edu.tw/php/logout.php")
+	@agent.get("http://ecourse.elearning.ccu.edu.tw/php/logout.php")
   end
   private
   def checkLogin
-	resp = getResp("http://ecourse.elearning.ccu.edu.tw/php/Courses_Admin/take_course.php?PHPSESSID=#{@session}")
-	page = Nokogiri::HTML(resp.body.encode("UTF-8", "BIG5", :undef => :replace, :invalid => :replace))
-	if (page.css("title").text =~ /權限錯誤/)
+	@agent.get("http://ecourse.elearning.ccu.edu.tw/php/Courses_Admin/take_course.php?PHPSESSID=#{@session}")
+	#page = Nokogiri::HTML(resp.body.encode("UTF-8", "BIG5", :undef => :replace, :invalid => :replace))
+	if (@agent.page.parser.css("title").text.encode("UTF-8", "BIG5", :undef => :replace, :invalid => :replace) =~ /權限錯誤/)
 	  login()
 	end
   end
   def getCourseIdList
     checkLogin()
     homework = Hash.new
-    resp = getResp("http://ecourse.elearning.ccu.edu.tw/php/Courses_Admin/take_course.php?PHPSESSID=#{@session}&frame=1")
-    page = Nokogiri::HTML(resp.body)
-    page.css("table table td font a[href != \"#\"]").each { |x|
+    @agent.get("http://ecourse.elearning.ccu.edu.tw/php/Courses_Admin/take_course.php?PHPSESSID=#{@session}&frame=1")
+    @agent.page.parser.css("table table td font a[href != \"#\"]").each { |x|
       @courseId [x["href"].split("=")[1]] = x.text.chomp if x.text.chomp != ""
     }
   end
