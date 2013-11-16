@@ -1,4 +1,6 @@
 #!/usr/bin/env ruby
+#encoding:utf-8
+
 
 require 'Qt'
 
@@ -15,6 +17,7 @@ class EcourseReminer < Qt::Dialog
   slots "login()", "click(bool)", "logout()", "hideHomework()"
   def initialize(parent = nil)
     super
+	Qt::TextCodec::setCodecForCStrings(Qt::TextCodec::codecForName("UTF-8"))
     @ui = EcourseReminerDia.new
     @ui.setupUi(self)
 
@@ -106,10 +109,18 @@ class EcourseReminer < Qt::Dialog
     @homework = @handler.getHomework
     @conf['hideHomework'] = [] if !@conf.key?("hideHomework")
     @homework.each { |k, v|
-      v.reject {|x| @conf['hideHomework'].include?(x.name)}
+      v.reject! {|x|
+		@conf['hideHomework'].include?(x.name)
+	  }
     }
   end
   def hideHomework
+	reply = Qt::MessageBox::question(self, "Delete?", "Do you really want to delete it?\n Note : It can't be restore now", Qt::MessageBox.Yes, Qt::MessageBox.No)
+    return if reply == Qt::MessageBox::No
+	@selectHomework.each { |x|
+	  @conf['hideHomework'] << x.text.split(" ")[0].encode("UTF-8", "UTF-8", :undef => :replace, :invalid => :replace)
+	  x.setVisible(false)
+	}
   end
   def click(x)
     if x
@@ -136,7 +147,8 @@ class EcourseReminer < Qt::Dialog
     @ui.stack.setCurrentIndex(0)
   end
   def closeEvent(event)
-    @conf.save("conf.yml")
+	@conf['hideHomework'].uniq!
+    @conf.save("../config/conf.yml")
     reply = Qt::MessageBox::question(self, "Exit?", "Do you really want to exit?", Qt::MessageBox.Yes, Qt::MessageBox.No)
     if reply == Qt::MessageBox::Yes
       event.accept
