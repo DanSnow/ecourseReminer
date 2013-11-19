@@ -77,7 +77,7 @@ class EcourseReminer < Qt::Dialog
     return true
   end
   def showHomework
-    getHomework if ! @homework
+    getHomework unless @homework
     count = 0
     @homework.each { |k, v|
       vbox = Qt::VBoxLayout.new
@@ -145,6 +145,8 @@ class EcourseReminer < Qt::Dialog
   def logout
     @handler.logout
     @ui.stack.setCurrentIndex(0)
+	@homework = nil
+	@ui.tB.count.times{@ui.tB.removeItem(0)}
   end
   def closeEvent(event)
 	@conf['hideHomework'].uniq!
