@@ -8,6 +8,8 @@ require 'rubygems'
 require 'mechanize'
 require 'nokogiri'
 
+require 'pry'
+
 Encoding.default_external = Encoding::UTF_8
 Encoding.default_internal = Encoding::UTF_8
 
@@ -24,7 +26,7 @@ class EcourseHandler
   def login(id = nil, pass = nil)
     @id = id if id
     @pass = pass if pass
-    raise "No ID and Password" if !@id
+    raise "No ID and Password" unless @id
     @agent.get("http://ecourse.elearning.ccu.edu.tw/")
 	@agent.page.form_with(:name => 'loginform') { |form|
 	  form.id = @id
@@ -47,20 +49,25 @@ class EcourseHandler
       @agent.get("http://ecourse.elearning.ccu.edu.tw/php/Testing_Assessment/show_allwork.php")
       homework[v]=[]
 	  @agent.page.encoding = 'BIG5'
-      @agent.page.parser.css("table table tr").drop(1).map { |x|
+	  webPage = @agent.page.parser
+      webPage.css("table table tr").drop(1).map { |x|
 		next if x.css("td input[value=\"uploadwork\"]")[0]['disabled']
         workId = x.css("td input[name=\"work_id\"]")[0]['value']
         name = x.css("td")[1].text.encode("UTF-8")
 		date = Date.parse(x.css("td")[3].text.chomp)
+		@agent.form_with(:work_id => workId).submit
 		resp = getResp("http://ecourse.elearning.ccu.edu.tw/php/Testing_Assessment/show_allwork.php", true, {'action' => 'seemywork', 'work_id' => workId})
 		page = Nokogiri::HTML(resp.body.encode("UTF-8", "BIG5", :undef => :replace, :invalid => :replace))
+		#binding.pry
 		if page.css("body").empty?
 		  done=false
 		else
 		  done=true
 		end
         homework[v] << @homeworkData.new(workId, name, done, k, date)
+		@agent.back
       }
+
     }
     return homework
   end

@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 #encoding:utf-8
 
+require 'pry'
 
 require 'Qt'
 
@@ -77,7 +78,7 @@ class EcourseReminer < Qt::Dialog
     return true
   end
   def showHomework
-    getHomework if ! @homework
+    getHomework unless @homework
     count = 0
     @homework.each { |k, v|
       vbox = Qt::VBoxLayout.new
@@ -107,7 +108,8 @@ class EcourseReminer < Qt::Dialog
   end
   def getHomework
     @homework = @handler.getHomework
-    @conf['hideHomework'] = [] if !@conf.key?("hideHomework")
+    @conf['hideHomework'] = [] unless @conf.key?("hideHomework")
+	binding.pry
     @homework.each { |k, v|
       v.reject! {|x|
 		@conf['hideHomework'].include?(x.name)
@@ -145,6 +147,8 @@ class EcourseReminer < Qt::Dialog
   def logout
     @handler.logout
     @ui.stack.setCurrentIndex(0)
+	@homework = nil
+	@ui.tB.count.times{@ui.tB.removeItem(0)}
   end
   def closeEvent(event)
 	@conf['hideHomework'].uniq!
