@@ -55,9 +55,8 @@ class EcourseHandler
         workId = x.css("td input[name=\"work_id\"]")[0]['value']
         name = x.css("td")[1].text.encode("UTF-8")
 		date = Date.parse(x.css("td")[3].text.chomp)
-		@agent.form_with(:work_id => workId).submit
-		resp = getResp("http://ecourse.elearning.ccu.edu.tw/php/Testing_Assessment/show_allwork.php", true, {'action' => 'seemywork', 'work_id' => workId})
-		page = Nokogiri::HTML(resp.body.encode("UTF-8", "BIG5", :undef => :replace, :invalid => :replace))
+		@agent.page.forms.detect{|x| x['action'] == 'seemywork' && x['work_id'] == workId}.submit
+		page = @agent.page.parser
 		#binding.pry
 		if page.css("body").empty?
 		  done=false
@@ -87,7 +86,7 @@ class EcourseHandler
   end
   def getCourseIdList
     checkLogin()
-    homework = Hash.new
+    #homework = Hash.new
     @agent.get("http://ecourse.elearning.ccu.edu.tw/php/Courses_Admin/take_course.php?PHPSESSID=#{@session}&frame=1")
     @agent.page.parser.css("table table td font a[href != \"#\"]").each { |x|
       @courseId [x["href"].split("=")[1]] = x.text.chomp if x.text.chomp != ""
