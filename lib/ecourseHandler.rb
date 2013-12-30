@@ -8,8 +8,6 @@ require 'rubygems'
 require 'mechanize'
 require 'nokogiri'
 
-require 'pry'
-
 Encoding.default_external = Encoding::UTF_8
 Encoding.default_internal = Encoding::UTF_8
 
@@ -57,7 +55,6 @@ class EcourseHandler
 		date = Date.parse(x.css("td")[3].text.chomp)
 		@agent.page.forms.detect{|x| x['action'] == 'seemywork' && x['work_id'] == workId}.submit
 		page = @agent.page.parser
-		#binding.pry
 		if page.css("body").empty?
 		  done=false
 		else
@@ -86,7 +83,6 @@ class EcourseHandler
   end
   def getCourseIdList
     checkLogin()
-    #homework = Hash.new
     @agent.get("http://ecourse.elearning.ccu.edu.tw/php/Courses_Admin/take_course.php?PHPSESSID=#{@session}&frame=1")
     @agent.page.parser.css("table table td font a[href != \"#\"]").each { |x|
       @courseId [x["href"].split("=")[1]] = x.text.chomp if x.text.chomp != ""
