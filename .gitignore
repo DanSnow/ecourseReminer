@@ -1,6 +1,6 @@
-config/*
 *.swp
 *.ui.rb
 *.rcc.rb
 *.bak
 .bundle
+conf.yml
