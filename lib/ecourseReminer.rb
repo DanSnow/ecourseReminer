@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 #encoding:utf-8
 
+require 'pry'
 
 require 'Qt'
 
@@ -107,7 +108,8 @@ class EcourseReminer < Qt::Dialog
   end
   def getHomework
     @homework = @handler.getHomework
-    @conf['hideHomework'] = [] if !@conf.key?("hideHomework")
+    @conf['hideHomework'] = [] unless @conf.key?("hideHomework")
+	binding.pry
     @homework.each { |k, v|
       v.reject! {|x|
 		@conf['hideHomework'].include?(x.name)
