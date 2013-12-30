@@ -3,7 +3,7 @@ task :default => [:main]
 directory "config"
 
 task :main => ["config"] do
-  gem "nokogiri"
+  gem "mechanize"
   gem "qtbindings"
 end
 
