@@ -10,7 +10,7 @@ ToDo
 ```
 git clone git://github.com/DanSnow/ecourseReminer.git
 bundle install
-bin/ecourseReminer.sh
+bin/ecourseReminer
 ```
 ####Enjoy it####
 
