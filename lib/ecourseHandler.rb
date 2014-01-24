@@ -7,7 +7,6 @@ require 'bundler/setup'
 require 'net/http'
 require 'date'
 
-require 'rubygems'
 require 'mechanize'
 require 'nokogiri'
 
