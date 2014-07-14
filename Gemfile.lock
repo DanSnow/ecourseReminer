@@ -33,4 +33,4 @@ PLATFORMS
 DEPENDENCIES
   mechanize (~> 2.7.3)
   nokogiri (~> 1.6.0)
-  qtbindings (~> 4.8.3.0)
+  qtbindings (= 4.8.3.0)
