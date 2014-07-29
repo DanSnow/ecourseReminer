@@ -16,12 +16,12 @@ bin/ecourseReminer
 
 Depency
 -------------
--   ruby >= 1.9.3
+-   ruby 1.9.3
 
 ###gem###
 -   Mechanize >= 2.7.3
--   qtbindings >= 4.8.3.0
+-   qtbindings == 4.8.3.0
 
 Author
 -----------
--  DanSnow 
+-  DanSnow
